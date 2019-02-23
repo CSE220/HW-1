@@ -1,6 +1,6 @@
-# type your first and last name here
-# type your Net ID here (e.g., jmsmith)
-# type your SBU ID # here (e.g., 111234567)
+# Sayan Sivakumaran
+# ssivakumaran
+# 110261379
 
 .data
 # Command-line arguments
@@ -56,8 +56,18 @@ zero_args:
     # End: save command-line arguments to main memory
     
 start_coding_here:
-    # Start the assignment by writing your code here
-
+    # Check if first argument has length 1
+    lw  $t0, addr_arg0
+    lbu $t1, 1($t0)                   # Load second character into $t1          
+    bne $zero, $t1, invalid_operation # If second character is not 0, we fail the test   
+    j exit
+ 
+invalid_operation:
+    la $a0, invalid_operation_error
+    li $v0, 4
+    syscall
+ 
+    j exit
 
 exit:
     li $a0, '\n'
