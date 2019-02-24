@@ -56,19 +56,72 @@ zero_args:
     # End: save command-line arguments to main memory
     
 start_coding_here:
-    # Check if first argument has length 1
+    jal validate_first_argument
+    
     lw  $t0, addr_arg0
-    lbu $t1, 1($t0)                   # Load second character into $t1          
-    bne $zero, $t1, invalid_operation # If second character is not 0, we fail the test   
-    j exit
+    lbu $t1, 0($t0)                     # Extract first character from string
+    
+    beq $t1, '2', two_command		# If first argument matches none of these cases, set invalid
+    beq $t1, 'S', S_command
+    beq $t1, 'L', L_command
+    beq $t1, 'D', D_command
+    beq $t1, 'A', A_command
+    
+    j invalid_operation           
+    
+validate_first_argument:		# Check if first argument has string length 1
+    lw  $t0, addr_arg0
+    lbu $t1, 1($t0)                   	# Load second character into $t1          
+    bne $zero, $t1, invalid_operation 	# If second character is not 0, we fail the test
+    
+    jr $ra
  
+two_command:
+     	jal check_2_args
+     	j exit
+     
+S_command:
+	jal check_2_args
+     	j exit
+
+L_command:
+	jal check_2_args
+     	j exit 
+     
+D_command:
+	jal check_2_args
+     	j exit
+
+A_command:
+	jal check_5_args
+     	j exit 
+     
+check_2_args:
+     	 lw $t0, addr_arg2
+    	 bne $zero, $t0, invalid_args	# Check if third argument is empty (equivalent to only having two arguments)
+     
+    	 jr $ra 
+     
+check_5_args:
+	lw $t0, addr_arg4
+     	beq $zero, $t0, invalid_args	# Check if fifth argument is not empty (equivalent to only having five arguments)
+     
+    	jr $ra 
+        
 invalid_operation:
     la $a0, invalid_operation_error
     li $v0, 4
     syscall
  
     j exit
-
+    
+invalid_args:
+    la $a0, invalid_args_error
+    li $v0, 4
+    syscall
+ 
+    j exit
+    
 exit:
     li $a0, '\n'
     li $v0, 11
