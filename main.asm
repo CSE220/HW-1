@@ -200,20 +200,63 @@ D_command:
      	lw $t1, addr_arg1
      	li $t2, 0	# iterator from 0 to 7
  	jal validate_location_string
- 	
-     	j exit 
+ 	lw $t0, addr_arg1 # Increases from 0 to 7
+ 	li $t1, 0
+ 	li $t4, 0 	# Initialize looping sum to 0
+ 	j calculate_location_loop
 
 validate_location_string:
-	lbu $t3, 0($t1)
+	bge  $t2, 8, location_go_back
 	
+	lbu $t3, 0($t1)
 	addi $t1, $t1, 1
 	addi $t2, $t2, 1
-	beq $t3, 48, validate_location_string
 	
+	beq $t3, 48, validate_location_string
 	bgt $t3, 122, invalid_args     
 	blt $t3, 97, invalid_args
 	
-	bne $t2, 8, validate_location_string
+	j validate_location_string
+
+location_go_back:
+	jr $ra
+
+calculate_location_loop:
+	lbu $a0, 0($t0)
+	jal location_char_to_value
+	add $t4, $t4, $v1
+	
+	addi $t0, $t0, 1
+	addi $t1, $t1, 1
+	bne $t1, 8, calculate_location_loop
+	
+	move $a0, $t4
+	li $v0, 1
+	syscall
+	
+	j exit
+	
+location_char_to_value:
+	beq $a0, 48, result_zero
+	
+	addi $t7, $a0, -97
+	li $t6, 0x00000001
+	move $t5, $zero
+	j location_char_loop
+
+location_char_loop:
+	beq $t5, $t7, set_result
+	sll $t6, $t6, 1
+	addi $t5, $t5, 1
+	j location_char_loop
+
+set_result:
+	move $v1, $t6
+	
+	jr $ra
+	
+result_zero:
+	move $v1, $zero
 	
 	jr $ra
 #-------------------------------------------------
