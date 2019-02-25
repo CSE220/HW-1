@@ -91,10 +91,42 @@ two_binary_loop:
 	mul $t3, $v1, $t2
 	add $t4, $t4, $t3
 	
-	beq $t0, $t1, exit
+	beq $t0, $t1, convert_two_complement
 	addi $t1, $t1, -1
 	sll $t2, $t2, 4
 	j two_binary_loop
+
+convert_two_complement:
+	move $t0, $t4
+	li $t1, 0x10000000
+	and $t2, $t1, $t0
+	beq $t2, $t1, two_complement_is_negative
+	
+	move $a0, $t0
+	li $v0, 1
+	syscall
+	
+	j exit
+	
+two_complement_is_negative:
+	li $t1, 0x00000001       # Number to mask with
+	li $t2, 0		 # Iterator
+	addi $t0, $t0, -1       # Reverse adding 1 to Twos Complement
+	j two_complement_loop
+
+two_complement_loop:
+	xor $t0, $t0, $t1
+	
+	addi $t2, $t2, 1
+	sll $t1, $t1, 1
+	bne $t2, 32, two_complement_loop
+	
+	move $a0, $t0
+	neg $a0, $a0
+	li $v0, 1
+	syscall
+	
+	j exit
      
 S_command:
 	jal check_2_args
@@ -155,9 +187,6 @@ invalid_args:
     j exit
     
 exit:
-    andi $a0, $t4, 0x0001
-    li $v0, 1
-    syscall
     li $a0, '\n'
     li $v0, 11
     syscall
