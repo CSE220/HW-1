@@ -187,12 +187,38 @@ signed_is_negative:
 	syscall
 	
 	j exit
+#-------------------------------------------------
 
-L_command:
-	jal check_2_args
-     	j exit 
-     
+#-------------------------------------------------
+# D COMMAND
+#-------------------------------------------------- 
+
 D_command:
+	jal check_2_args
+	
+	# Validate location representation
+     	lw $t1, addr_arg1
+     	li $t2, 0	# iterator from 0 to 7
+ 	jal validate_location_string
+ 	
+     	j exit 
+
+validate_location_string:
+	lbu $t3, 0($t1)
+	
+	addi $t1, $t1, 1
+	addi $t2, $t2, 1
+	beq $t3, 48, validate_location_string
+	
+	bgt $t3, 122, invalid_args     
+	blt $t3, 97, invalid_args
+	
+	bne $t2, 8, validate_location_string
+	
+	jr $ra
+#-------------------------------------------------
+     
+L_command:
 	jal check_2_args
      	j exit
 
