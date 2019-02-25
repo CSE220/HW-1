@@ -82,32 +82,14 @@ validate_first_argument:		# Check if first argument has string length 1
 two_command:
      	jal check_2_args
      	# Loop through and create binary representation 
-     	la $t1, addr_arg1
+     	lw $t1, addr_arg1
      	li $t2, 0	# iterator from 0 to 7
- 	jal validate_arg1_two
+ 	jal validate_hexadecimal_string
      	lw $t0, addr_arg1
      	addi $t1, $t0, 7 # Goes from 7 to 0 (read string end to front)
      	li $t2, 1	 # Place value, initialize at 1
      	li $t4, 0	 # Initialize sum to 0
-     	j two_binary_loop
-
-validate_arg1_two:
-	lbu $t3, 0($t1)
-	bgt $t3, 70, invalid_args     
-	beq $t3, ':',  invalid_args
-	beq $t3, ';',  invalid_args
-	beq $t3, '<',  invalid_args
-	beq $t3, '=',  invalid_args
-	beq $t3, '>',  invalid_args
-	beq $t3, '?',  invalid_args
-	beq $t3, '@',  invalid_args
-	blt $t3, 48, invalid_args
-	
-	addi $t1, $t1, 1
-	addi $t2, $t2, 1
-	bne $t2, 8, validate_arg1_two
-	
-	jr $ra	
+     	j two_binary_loop	
      	
 two_binary_loop:
 	lb $a0, 0($t1)  # Character to read
@@ -153,10 +135,58 @@ two_complement_loop:
 	j exit
 #-------------------------------------------------
 
-     
+#-------------------------------------------------
+# S COMMAND
+#-------------------------------------------------- 
 S_command:
 	jal check_2_args
+	# Loop through and create binary representation 
+     	lw $t1, addr_arg1
+     	li $t2, 0	# iterator from 0 to 7
+ 	jal validate_hexadecimal_string
+ 	lw $t0, addr_arg1
+     	addi $t1, $t0, 7 # Goes from 7 to 0 (read string end to front)
+     	li $t2, 1	 # Place value, initialize at 1
+     	li $t4, 0	 # Initialize sum to 0
+     	j signed_binary_loop
      	j exit
+
+signed_binary_loop:
+	lb $a0, 0($t1)  # Character to read
+	jal hex_char_to_dec
+	mul $t3, $v1, $t2
+	add $t4, $t4, $t3
+	
+	beq $t0, $t1, convert_signed_number
+	addi $t1, $t1, -1
+	sll $t2, $t2, 4
+	j signed_binary_loop
+
+convert_signed_number:
+	move $t0, $t4
+	li $t1, 0x80000000
+	and $t2, $t1, $t0
+	beq $t2, $t1, signed_is_negative
+	
+	move $a0, $t0
+	li $v0, 1
+	syscall
+	
+	j exit
+
+signed_is_negative:
+	andi $t0, $t0, 0x7FFFFFFF
+	
+	#Print negative sign
+	li $a0, '-'
+	li $v0, 11
+	syscall
+	
+	move $a0, $t0
+	li $v0, 1
+	syscall
+	
+	j exit
 
 L_command:
 	jal check_2_args
@@ -184,6 +214,26 @@ check_5_args:
 #-----------------------------------------------------------------------     	
 # UTILS
 #-----------------------------------------------------------------------  
+
+#-----------------------------------------------------------------------  	
+# Validates a string to make sure it has only hexadecimal characters
+validate_hexadecimal_string:
+	lbu $t3, 0($t1)
+	bgt $t3, 70, invalid_args     
+	beq $t3, ':',  invalid_args
+	beq $t3, ';',  invalid_args
+	beq $t3, '<',  invalid_args
+	beq $t3, '=',  invalid_args
+	beq $t3, '>',  invalid_args
+	beq $t3, '?',  invalid_args
+	beq $t3, '@',  invalid_args
+	blt $t3, 48, invalid_args
+	
+	addi $t1, $t1, 1
+	addi $t2, $t2, 1
+	bne $t2, 8, validate_hexadecimal_string
+	
+	jr $ra
 
 #-----------------------------------------------------------------------  	
 # Takes a hexadecimal character and converts it to a decimal number
