@@ -261,9 +261,58 @@ result_zero:
 	jr $ra
 #-------------------------------------------------
      
+#-------------------------------------------------
+# L COMMAND
+#-------------------------------------------------- 
 L_command:
 	jal check_2_args
+     	lw $t1, addr_arg1
+     	li $t2, 0	# iterator from 0 to 7
+ 	jal validate_dec_string
+ 	
+ 	lw $t0, addr_arg1 # Go backwards from 7 to 0
+ 	addi $t0, $t0, 7
+ 	li $t1, 0
+ 	li $t4, 0 	# Initialize looping sum to 0
+ 	li $t2, 1
+ 	li $t3, 10
+ 	j calculate_dec_loop
+ 	
      	j exit
+
+validate_dec_string:
+	lbu $t3, 0($t1)
+	bgt $t3, 57, invalid_args     
+	blt $t3, 48, invalid_args
+	
+	addi $t1, $t1, 1
+	addi $t2, $t2, 1
+	bne $t2, 8, validate_dec_string
+	
+	jr $ra
+
+dec_char_to_value:	
+	addi $v1, $a0, -48
+	jr $ra
+
+calculate_dec_loop:
+	lbu $a0, 0($t0)
+	jal dec_char_to_value
+	mul $t6, $t2, $v1
+	add $t4, $t4, $t6
+	
+	addi $t0, $t0, -1
+	addi $t1, $t1, 1
+	mul $t2, $t2, $t3
+	bne $t1, 8, calculate_dec_loop
+	
+	move $a0, $t4
+	li $v0, 1
+	syscall
+	
+	j exit
+
+#-------------------------------------------------- 
 
 A_command:
 	jal check_5_args
