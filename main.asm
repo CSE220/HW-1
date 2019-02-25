@@ -78,7 +78,23 @@ validate_first_argument:		# Check if first argument has string length 1
  
 two_command:
      	jal check_2_args
-     	j exit
+     	# Loop through and create binary representation 
+     	lw $t0, addr_arg1
+     	addi $t1, $t0, 7 # Goes from 7 to 0 (read string end to front)
+     	li $t2, 1	 # Place value, initialize at 1
+     	li $t4, 0	 # Initialize sum to 0
+     	j two_binary_loop
+     	
+two_binary_loop:
+	lb $a0, 0($t1)  # Character to read
+	jal hex_char_to_dec
+	mul $t3, $v1, $t2
+	add $t4, $t4, $t3
+	
+	beq $t0, $t1, exit
+	addi $t1, $t1, -1
+	sll $t2, $t2, 4
+	j two_binary_loop
      
 S_command:
 	jal check_2_args
@@ -106,7 +122,23 @@ check_5_args:
 	lw $t0, addr_arg4
      	beq $zero, $t0, invalid_args	# Check if fifth argument is not empty (equivalent to only having five arguments)
      
-    	jr $ra 
+    	jr $ra
+  
+#-----------------------------------------------------------------------  	
+# Takes a hexadecimal character and converts it to a decimal number
+hex_char_to_dec:
+	bge $a0, 65, convert_letter     # If $a0 has ascii value greater than 'A'
+	bge $a0, 48, convert_number	# If $a0 has ascii value greater than '0'
+	
+convert_number:
+	addi $v1, $a0, -48		# Map ASCII dec values to hex value
+	jr $ra
+	
+convert_letter:
+	addi $v1, $a0, -55		# Map ASCII dec values to hex value
+	jr $ra
+
+#----------------------------------------------------------------------
         
 invalid_operation:
     la $a0, invalid_operation_error
@@ -123,6 +155,9 @@ invalid_args:
     j exit
     
 exit:
+    andi $a0, $t4, 0x0001
+    li $v0, 1
+    syscall
     li $a0, '\n'
     li $v0, 11
     syscall
