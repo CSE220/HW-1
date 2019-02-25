@@ -75,15 +75,39 @@ validate_first_argument:		# Check if first argument has string length 1
     bne $zero, $t1, invalid_operation 	# If second character is not 0, we fail the test
     
     jr $ra
- 
+
+#-------------------------------------------------
+# TWO COMMAND
+#--------------------------------------------------
 two_command:
      	jal check_2_args
      	# Loop through and create binary representation 
+     	la $t1, addr_arg1
+     	li $t2, 0	# iterator from 0 to 7
+ 	jal validate_arg1_two
      	lw $t0, addr_arg1
      	addi $t1, $t0, 7 # Goes from 7 to 0 (read string end to front)
      	li $t2, 1	 # Place value, initialize at 1
      	li $t4, 0	 # Initialize sum to 0
      	j two_binary_loop
+
+validate_arg1_two:
+	lbu $t3, 0($t1)
+	bgt $t3, 70, invalid_args     
+	beq $t3, ':',  invalid_args
+	beq $t3, ';',  invalid_args
+	beq $t3, '<',  invalid_args
+	beq $t3, '=',  invalid_args
+	beq $t3, '>',  invalid_args
+	beq $t3, '?',  invalid_args
+	beq $t3, '@',  invalid_args
+	blt $t3, 48, invalid_args
+	
+	addi $t1, $t1, 1
+	addi $t2, $t2, 1
+	bne $t2, 8, validate_arg1_two
+	
+	jr $ra	
      	
 two_binary_loop:
 	lb $a0, 0($t1)  # Character to read
@@ -127,6 +151,8 @@ two_complement_loop:
 	syscall
 	
 	j exit
+#-------------------------------------------------
+
      
 S_command:
 	jal check_2_args
@@ -155,7 +181,10 @@ check_5_args:
      	beq $zero, $t0, invalid_args	# Check if fifth argument is not empty (equivalent to only having five arguments)
      
     	jr $ra
-  
+#-----------------------------------------------------------------------     	
+# UTILS
+#-----------------------------------------------------------------------  
+
 #-----------------------------------------------------------------------  	
 # Takes a hexadecimal character and converts it to a decimal number
 hex_char_to_dec:
