@@ -339,21 +339,46 @@ print_location_char:
 #-------------------------------------------------- 
 A_command:
 	jal check_5_args
+	
 	lw $t1, addr_arg1
      	li $t2, 0	# iterator from 0 to 7
      	li $v1, 0
-     	jal count_uppercase
+     	lw $t5, addr_arg4
+     	jal count_digits
+     	add $a0, $zero, $v1
      	
+     	lw $t1, addr_arg1
+     	li $t2, 0	# iterator from 0 to 7
+     	li $v1, 0
+     	lw $t5, addr_arg3
+     	jal count_lowercase
+     	li $t4, 16
+     	mul $v1, $v1, $t4
+     	add $a0, $a0, $v1
+     	
+     	lw $t1, addr_arg1
+     	li $t2, 0	# iterator from 0 to 7
+     	li $v1, 0
+     	lw $t5, addr_arg2
+     	jal count_uppercase
+     	li $t4, 256
+     	mul $v1, $v1, $t4
+     	add $a0, $a0, $v1
+     	
+     	li $v0, 35
+     	syscall
      	j exit 
+
+goback:
+	jr $ra
      	
 count_uppercase:
-	beq $t2, 8, exit
+	lbu $t6, 0($t5)
+	beq $t6, 'N', goback
+	beq $t2, 8, goback
 	lbu $t3, 0($t1)
 	addi $t1, $t1, 1
 	addi $t2, $t2, 1
-	move $a0, $t3
-	li $v0, 11,
-	syscall
 	bge $t3, 65, count_uppercase_second    
 	
 	bne $t2, 8, count_uppercase
@@ -370,8 +395,47 @@ count_uppercase_second:
 	jr $ra
 		
 count_lowercase:
+	lbu $t6, 0($t5)
+	beq $t6, 'N', goback
+	beq $t2, 8, goback
+	lbu $t3, 0($t1)
+	addi $t1, $t1, 1
+	addi $t2, $t2, 1
+	bge $t3, 97, count_lowercase_second    
+	
+	bne $t2, 8, count_lowercase
+	
+	jr $ra
 
+count_lowercase_second:
+	bgt $t3, 122, count_lowercase
+	
+	addi $v1, $v1, 1
+	
+	bne $t2, 8, count_lowercase
+	
+	jr $ra
 count_digits:
+	lbu $t6, 0($t5)
+	beq $t6, 'N', goback
+	beq $t2, 8, goback
+	lbu $t3, 0($t1)
+	addi $t1, $t1, 1
+	addi $t2, $t2, 1
+	bge $t3, 48, count_digits_second    
+	
+	bne $t2, 8, count_digits
+	
+	jr $ra
+
+count_digits_second:
+	bgt $t3, 57, count_digits
+	
+	addi $v1, $v1, 1
+	
+	bne $t2, 8, count_digits
+	
+	jr $ra
      	
 #-------------------------------------------------
      
