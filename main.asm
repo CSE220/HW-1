@@ -277,8 +277,6 @@ L_command:
  	li $t2, 1
  	li $t3, 10
  	j calculate_dec_loop
- 	
-     	j exit
 
 validate_dec_string:
 	lbu $t3, 0($t1)
@@ -295,6 +293,12 @@ dec_char_to_value:
 	addi $v1, $a0, -48
 	jr $ra
 
+print_char:
+	li $v0, 11
+	syscall
+	
+	jr $ra
+
 calculate_dec_loop:
 	lbu $a0, 0($t0)
 	jal dec_char_to_value
@@ -306,12 +310,28 @@ calculate_dec_loop:
 	mul $t2, $t2, $t3
 	bne $t1, 8, calculate_dec_loop
 	
-	move $a0, $t4
-	li $v0, 1
-	syscall
-	
-	j exit
+	move $t0, $t4
+	li $t1, 1
+	li $t5, 96 	# Letter to print
+	j print_location_numeral
 
+print_location_numeral:
+	addi $t5, $t5, 1
+	and $t2, $t0, $t1
+	srl $t0, $t0, 1
+	beq $t1, $t2, print_location_char
+
+	bge $t5, 122, exit
+	
+	j print_location_numeral
+
+print_location_char:
+	move $a0, $t5
+	jal print_char
+	
+	bge $t5, 122, exit
+	
+	j print_location_numeral
 #-------------------------------------------------- 
 
 A_command:
