@@ -333,10 +333,47 @@ print_location_char:
 	
 	j print_location_numeral
 #-------------------------------------------------- 
-
+     
+#-------------------------------------------------
+# L COMMAND
+#-------------------------------------------------- 
 A_command:
 	jal check_5_args
+	lw $t1, addr_arg1
+     	li $t2, 0	# iterator from 0 to 7
+     	li $v1, 0
+     	jal count_uppercase
+     	
      	j exit 
+     	
+count_uppercase:
+	beq $t2, 8, exit
+	lbu $t3, 0($t1)
+	addi $t1, $t1, 1
+	addi $t2, $t2, 1
+	move $a0, $t3
+	li $v0, 11,
+	syscall
+	bge $t3, 65, count_uppercase_second    
+	
+	bne $t2, 8, count_uppercase
+	
+	jr $ra
+
+count_uppercase_second:
+	bgt $t3, 90, count_uppercase
+	
+	addi $v1, $v1, 1
+	
+	bne $t2, 8, count_uppercase
+	
+	jr $ra
+		
+count_lowercase:
+
+count_digits:
+     	
+#-------------------------------------------------
      
 check_2_args:
      	 lw $t0, addr_arg2
